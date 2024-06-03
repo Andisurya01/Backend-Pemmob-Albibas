@@ -55,26 +55,30 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-exports.updateProduct = async (req, res) => {
-  const { id } = req.params;
-  const { name, description, category, image, rating, size, stock, price } =
-    req.body;
+exports.updateProduct = [
+  upload.single("image"),
+  async (req, res) => {
+    const { id } = req.params;
+    const { name, description, category, rating, size, stock, price } = req.body;
+    const image = req.file ? req.file.path : null;
 
-  try {
-    const result = await pool.query(
-      `UPDATE "Product" SET name = $1, description = $2, category = $3, image = $4, rating = $5, size = $6, stock = $7, price = $8 WHERE id = $9 RETURNING *`,
-      [name, description, category, image, rating, size, stock, price, id]
-    );
+    try {
+      const result = await pool.query(
+        `UPDATE "Product" SET name = $1, description = $2, category = $3, image = $4, rating = $5, size = $6, stock = $7, price = $8 WHERE id = $9 RETURNING *`,
+        [name, description, category, image, rating, size, stock, price, id]
+      );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Product not found" });
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
+  },
+];
 
-    res.json(result.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
 exports.deleteProduct = async (req, res) => {
   const { id } = req.params;
