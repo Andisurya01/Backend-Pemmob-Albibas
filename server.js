@@ -16,7 +16,7 @@ app.use('/auth', authRoutes);
 app.use('/shoes', productRoutes);
 app.use('/highlight', highlightRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3200;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
