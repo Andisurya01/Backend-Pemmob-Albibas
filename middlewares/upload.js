@@ -6,8 +6,7 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        const datePrefix = new Date().toISOString().replace(/:/g, '-').split('.')[0];
-        cb(null, `${datePrefix}-${file.originalname}`);
+        cb(null, `${file.originalname}`);
     }
 });
 
