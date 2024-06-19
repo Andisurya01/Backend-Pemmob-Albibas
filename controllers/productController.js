@@ -25,7 +25,7 @@ exports.addProduct = [
 exports.getProducts = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const offset = parseInt(req.query.offset) || 0;
-
+  
   try {
     const result = await pool.query(
       `SELECT * FROM "Product" LIMIT $1 OFFSET $2`,
