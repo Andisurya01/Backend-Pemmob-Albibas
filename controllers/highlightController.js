@@ -1,34 +1,60 @@
-const pool = require("../config/database");
+const {
+  addHighlight,
+  removeHighlight,
+  getHighlightById,
+  getAllHighlights,
+} = require("../models/highlightModel");
 
-exports.addHighlight = async (req, res) => {
+exports.addProductToHighlight = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query(
-      `INSERT INTO "Product_Highlight" (product_id) VALUES ($1) RETURNING *`,
-      [id]
-    );
-
-    res.status(201).json(result.rows[0]);
+    const highlight = await addHighlight(id);
+    res.status(201).json(highlight);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-exports.removeHighlight = async (req, res) => {
+exports.removeProductFromHighlight = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query(
-      `DELETE FROM "Product_Highlight" WHERE product_id = $1 RETURNING *`,
-      [id]
-    );
+    const highlight = await removeHighlight(id);
+    if (!highlight) {
+      return res
+        .status(404)
+        .json({ message: "Product not found in highlights" });
+    }
+    res.json({
+      message: `Product with ID ${id} removed from highlights successfully`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-    if (result.rows.length === 0) {
+exports.getHighlightById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const highlight = await getHighlightById(id);
+    if (!highlight) {
       return res.status(404).json({ message: "Highlight not found" });
     }
+    res.json(highlight);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-    res.json({ message: "Highlight removed successfully" });
+exports.getAllHighlights = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = parseInt(req.query.offset) || 0;
+
+  try {
+    const highlights = await getAllHighlights(limit, offset);
+    res.json(highlights);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
