@@ -25,7 +25,7 @@ exports.addProduct = [
 exports.getProducts = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const offset = parseInt(req.query.offset) || 0;
-  
+
   try {
     const result = await pool.query(
       `SELECT * FROM "Product" LIMIT $1 OFFSET $2`,
@@ -97,4 +97,21 @@ exports.deleteProduct = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+exports.getNonHighlightedProducts = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = parseInt(req.query.offset) || 0;
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM "Product" 
+       WHERE id NOT IN (SELECT product_id FROM "Product_Highlight")
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };

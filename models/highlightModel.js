@@ -5,6 +5,7 @@ const addHighlight = async (productId) => {
     `INSERT INTO "Product_Highlight" (product_id) VALUES ($1) RETURNING *`,
     [productId]
   );
+  
   return result.rows[0];
 };
 
@@ -36,9 +37,21 @@ const getAllHighlights = async (limit, offset) => {
   return result.rows;
 };
 
+const isProductHighlighted = async (productId) => {
+  console.log(productId);
+  const result = await pool.query(`
+    SELECT * FROM "Product_Highlight" WHERE product_id = $1`,
+    [productId]
+  );
+  console.log(result);
+  return result.rows.length > 0;
+};
+
+
 module.exports = {
   addHighlight,
   removeHighlight,
   getHighlightById,
   getAllHighlights,
+  isProductHighlighted
 };

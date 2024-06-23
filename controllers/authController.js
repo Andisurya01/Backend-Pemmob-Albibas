@@ -6,6 +6,7 @@ const authHelper = require("../helpers/authHelper");
 exports.login = async (req, res) => {
   const { user_name, password } = req.body;
   try {
+    console.log(user_name, password);
     const userResult = await pool.query(
       'SELECT * FROM "User" WHERE user_name = $1',
       [user_name]
