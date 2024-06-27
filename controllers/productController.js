@@ -6,8 +6,8 @@ exports.addProduct = [
   async (req, res) => {
     const { name, description, category, rating, size, stock, price } =
       req.body;
-    const image = req.file ? req.file.path : "";
-
+    const image = req.file ? req.file.filename : "";
+    console.log(req.file);
     try {
       const result = await pool.query(
         `INSERT INTO "Product" (name, description, category, image, rating, size, stock, price) 
@@ -60,24 +60,44 @@ exports.updateProduct = [
   async (req, res) => {
     const { id } = req.params;
     const { name, description, category, rating, size, stock, price } = req.body;
-    const image = req.file ? req.file.path : null;
+    const image = req.file ? req.file.filename : "";
 
     try {
-      const result = await pool.query(
-        `UPDATE "Product" SET name = $1, description = $2, category = $3, image = $4, rating = $5, size = $6, stock = $7, price = $8 WHERE id = $9 RETURNING *`,
-        [name, description, category, image, rating, size, stock, price, id]
+      // Ambil data produk yang ada
+      const currentProductResult = await pool.query(
+        `SELECT * FROM "Product" WHERE id = $1`,
+        [id]
       );
 
-      if (result.rows.length === 0) {
+      if (currentProductResult.rows.length === 0) {
         return res.status(404).json({ message: "Product not found" });
       }
 
-      res.json(result.rows[0]);
+      const currentProduct = currentProductResult.rows[0];
+
+      // Gunakan nilai yang ada jika data baru kosong
+      const updatedName = name || currentProduct.name;
+      const updatedDescription = description || currentProduct.description;
+      const updatedCategory = category || currentProduct.category;
+      const updatedImage = image || currentProduct.image;
+      const updatedRating = rating || currentProduct.rating;
+      const updatedSize = size || currentProduct.size;
+      const updatedStock = stock || currentProduct.stock;
+      const updatedPrice = price || currentProduct.price;
+
+      // Update produk dengan data baru atau yang sudah ada
+      const result = await pool.query(
+        `UPDATE "Product" SET name = $1, description = $2, category = $3, image = $4, rating = $5, size = $6, stock = $7, price = $8 WHERE id = $9 RETURNING *`,
+        [updatedName, updatedDescription, updatedCategory, updatedImage, updatedRating, updatedSize, updatedStock, updatedPrice, id]
+      );
+
+      res.status(201).json(result.rows[0]);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   },
 ];
+
 
 
 exports.deleteProduct = async (req, res) => {

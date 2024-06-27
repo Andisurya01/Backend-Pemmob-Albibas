@@ -24,8 +24,9 @@ exports.login = async (req, res) => {
     }
 
     const token = authHelper.generateToken(user.id);
-    res.json({ token });
+    res.status(200).json({ token });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ error: error.message });
   }
 };
