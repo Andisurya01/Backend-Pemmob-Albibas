@@ -3,12 +3,19 @@ const {
   removeHighlight,
   getHighlightById,
   getAllHighlights,
+  isProductHighlighted,
 } = require("../models/highlightModel");
 
 exports.addProductToHighlight = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const alreadyHighlighted = await isProductHighlighted(id);
+    if (alreadyHighlighted) {
+      return res
+        .status(400)
+        .json({ message: "Product is already highlighted" });
+    }
     const highlight = await addHighlight(id);
     res.status(201).json(highlight);
   } catch (error) {
