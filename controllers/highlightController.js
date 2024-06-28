@@ -1,3 +1,6 @@
+const pool = require("../config/database");
+
+
 const {
   addHighlight,
   removeHighlight,
@@ -33,7 +36,7 @@ exports.removeProductFromHighlight = async (req, res) => {
         .status(404)
         .json({ message: "Product not found in highlights" });
     }
-    res.json({
+    res.status(200).json({
       message: `Product with ID ${id} removed from highlights successfully`,
     });
   } catch (error) {
@@ -49,7 +52,7 @@ exports.getHighlightById = async (req, res) => {
     if (!highlight) {
       return res.status(404).json({ message: "Highlight not found" });
     }
-    res.json(highlight);
+    res.status(200).json(highlight);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -61,7 +64,24 @@ exports.getAllHighlights = async (req, res) => {
 
   try {
     const highlights = await getAllHighlights(limit, offset);
-    res.json(highlights);
+    res.status(200).json(highlights);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getNonHighlightedProducts = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = parseInt(req.query.offset) || 0;
+
+  try {
+    const [result] = await pool.query(
+      `SELECT * FROM \`Product\` 
+       WHERE id NOT IN (SELECT product_id FROM \`Product_Highlight\`)
+       LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

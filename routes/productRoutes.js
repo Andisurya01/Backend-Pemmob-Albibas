@@ -3,11 +3,11 @@ const router = express.Router();
 const productController = require("../controllers/productController");
 const { authenticateToken } = require("../helpers/authHelper");
 
-router.post("/", authenticateToken, productController.addProduct);
-router.get("/", productController.getProducts);
-router.get("/non-highlighted", productController.getNonHighlightedProducts);
-router.get("/:id", productController.getProductById);
-router.put("/:id", authenticateToken, productController.updateProduct);
-router.delete("/:id", authenticateToken, productController.deleteProduct);
+router
+    .get("/", productController.getProducts)
+    .get("/:id", productController.getProductById)
+    .put("/:id", authenticateToken, productController.updateProduct)
+    .post("/", authenticateToken, productController.addProduct)
+    .delete("/:id", authenticateToken, productController.deleteProduct)
 
 module.exports = router;

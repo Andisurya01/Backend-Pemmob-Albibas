@@ -7,7 +7,7 @@ exports.addProduct = [
   async (req, res) => {
     const { name, description, category, rating, size, stock, price } =
       req.body;
-    const image = req.file ? req.file.path : "";
+    const image = req.file ? req.file.filename : "";
 
     try {
       const [result] = await pool.query(
@@ -44,7 +44,7 @@ exports.getProducts = async (req, res) => {
       `SELECT * FROM \`Product\` LIMIT ? OFFSET ?`,
       [limit, offset]
     );
-    res.json(result);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -63,7 +63,7 @@ exports.getProductById = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json(result[0]);
+    res.status(200).json(result[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -73,36 +73,59 @@ exports.updateProduct = [
   upload.single("image"),
   async (req, res) => {
     const { id } = req.params;
-    const { name, description, category, rating, size, stock, price } =
-      req.body;
-    const image = req.file ? req.file.path : null;
+    const { name, description, category, rating, size, stock, price } = req.body;
+    const image = req.file ? req.file.filename : null;
 
     try {
+      // Ambil data produk yang ada
+      const [currentProductResult] = await pool.query(
+        `SELECT * FROM \`Product\` WHERE id = ?`,
+        [id]
+      );
+
+      if (currentProductResult.length === 0) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      const currentProduct = currentProductResult[0];
+
+      // Gunakan nilai yang ada jika data baru kosong
+      const updatedName = name || currentProduct.name;
+      const updatedDescription = description || currentProduct.description;
+      const updatedCategory = category || currentProduct.category;
+      const updatedImage = image || currentProduct.image;
+      const updatedRating = rating || currentProduct.rating;
+      const updatedSize = size || currentProduct.size;
+      const updatedStock = stock || currentProduct.stock;
+      const updatedPrice = price || currentProduct.price;
+
+      // Update produk dengan data baru atau yang sudah ada
       const [result] = await pool.query(
         `UPDATE \`Product\` SET name = ?, description = ?, category = ?, image = ?, rating = ?, size = ?, stock = ?, price = ? WHERE id = ?`,
-        [name, description, category, image, rating, size, stock, price, id]
+        [updatedName, updatedDescription, updatedCategory, updatedImage, updatedRating, updatedSize, updatedStock, updatedPrice, id]
       );
 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: "Product not found" });
       }
 
-      res.json({
+      res.status(201).json({
         id,
-        name,
-        description,
-        category,
-        image,
-        rating,
-        size,
-        stock,
-        price,
+        name: updatedName,
+        description: updatedDescription,
+        category: updatedCategory,
+        image: updatedImage,
+        rating: updatedRating,
+        size: updatedSize,
+        stock: updatedStock,
+        price: updatedPrice,
       });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   },
 ];
+
 
 exports.deleteProduct = async (req, res) => {
   const { id } = req.params;
@@ -116,25 +139,10 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json({ message: "Product deleted successfully" });
+    res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-exports.getNonHighlightedProducts = async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = parseInt(req.query.offset) || 0;
 
-  try {
-    const [result] = await pool.query(
-      `SELECT * FROM \`Product\` 
-       WHERE id NOT IN (SELECT product_id FROM \`Product_Highlight\`)
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
-    );
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
